@@ -1,0 +1,455 @@
+openapi: 3.0.0
+info:
+  title: OldMarket API
+  description: Backend API for the OldMarket legacy Android app store.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+
+components:
+  securitySchemes:
+    AdminAuth:
+      type: apiKey
+      in: header
+      name: X-Admin-Password
+  schemas:
+    App:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        category_code: { type: string }
+        category_label: { type: string }
+        rating: { type: number, format: float }
+        downloads: { type: integer }
+        review_count: { type: integer }
+        apk_file: { type: string }
+    Review:
+      type: object
+      properties:
+        id: { type: integer }
+        user_id: { type: integer }
+        username: { type: string }
+        avatar: { type: string }
+        rating: { type: integer }
+        comment: { type: string }
+        likes: { type: integer }
+        dislikes: { type: integer }
+        user_reaction: { type: integer }
+        comments_count: { type: integer }
+
+paths:
+  /api/apps:
+    get:
+      summary: List all apps
+      operationId: apps.api_apps
+      parameters:
+        - name: is_game
+          in: query
+          schema: { type: string }
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer }
+        - name: offset
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: A list of apps
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/App' }
+
+  /api/apps/search:
+    get:
+      summary: Search apps
+      operationId: apps.api_apps_search
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: is_game
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer }
+        - name: offset
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/App' }
+
+  /api/mobile/apps:
+    get:
+      summary: List all supported apps (mobile)
+      operationId: apps.api_apps_mobile
+      parameters:
+        - name: is_game
+          in: query
+          required: false
+          schema: { type: integer }
+        - name: lang
+          in: query
+          required: false
+          schema: { type: string }
+        - name: device_api
+          in: query
+          required: false
+          schema: { type: integer }
+      responses:
+        '200':
+          description: A list of apps
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/App' }
+
+  /api/app/{app_id}:
+    get:
+      summary: Get app details
+      operationId: app.api_app
+      parameters:
+        - name: app_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Detailed app object
+        '404':
+          description: App not found
+
+  /api/app/{app_id}/versions:
+    get:
+      summary: Get app versions
+      operationId: app.versions
+      parameters:
+        - name: app_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: App versions
+        '404':
+          description: App not found
+
+  /api/categories:
+    get:
+      summary: Get all categories
+      operationId: categories.get_categories
+      parameters:
+        - name: is_game
+          in: query
+          required: false
+          schema: { type: integer }
+      responses:
+        '200':
+          description: List of categories
+
+  /api/category/{category}/apps:
+    get:
+      summary: Get all categories
+      operationId: apps.get_apps_in_category
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Apps in category
+        '404':
+          description: Category not found
+
+  /api/download/{app_id}:
+    get:
+      summary: Download latest APK
+      operationId: download.download_app
+      parameters:
+        - name: app_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: APK file stream
+        '429':
+          description: IP Blocked
+  
+  /api/download/{app_id}/{version}:
+    get:
+      summary: Download specific APK version
+      operationId: download.download_app_version
+      parameters:
+        - name: app_id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: version
+          required: true
+          in: path
+          schema: { type: string }
+      responses:
+        '200':
+          description: APK file stream
+        '429':
+          description: IP Blocked
+
+  /api/banners:
+    get:
+      summary: Get banners
+      operationId: banners.get_banners
+      responses:
+        '200':
+          description: Banner list
+
+  /api/top-apps:
+    get:
+      summary: Get top apps
+      operationId: apps.top_apps
+      responses:
+        '200':
+          description: Apps
+
+  /api/app/{app_id}/screenshots:
+    get:
+      summary: Get app screenshots
+      operationId: app.screenshots
+      parameters:
+        - name: app_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: List of app's screenshots
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+
+  /api/app/{app_id}/reviews:
+    get:
+      summary: Get app reviews
+      operationId: review.get_reviews
+      parameters:
+        - name: app_id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: viewer_id
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: List of reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Review' }
+
+  /api/app/{app_id}/review:
+    post:
+      summary: Add a review
+      operationId: review.add_review
+      parameters:
+        - name: app_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, rating]
+              properties:
+                user_id: { type: integer }
+                rating: { type: integer }
+                comment: { type: string }
+      responses:
+        '201':
+          description: Review added
+
+  /api/review/{review_id}/reaction:
+    post:
+      summary: React to a review (Like/Dislike)
+      operationId: review.set_review_reaction
+      parameters:
+        - name: review_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, value]
+              properties:
+                user_id: { type: integer }
+                value: { type: integer, enum: [-1, 1] }
+      responses:
+        '200':
+          description: Reaction updated
+
+  /api/login:
+    post:
+      summary: User login
+      operationId: auth.login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+      responses:
+        '200':
+          description: Login successful
+        '401':
+          description: Invalid credentials
+
+  /api/register:
+    post:
+      summary: Standard registration
+      operationId: auth.register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password]
+              properties:
+                username: { type: string }
+                email: { type: string }
+                password: { type: string }
+      responses:
+        '201':
+          description: User created
+
+  /api/user/{user_id}/profile:
+    get:
+      summary: Get user profile
+      operationId: user.get_user_profile
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Profile data
+    put:
+      summary: Update user profile
+      operationId: user.update_user_profile
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                avatar: { type: string }
+                description: { type: string }
+      responses:
+        '200':
+          description: Profile updated
+
+  /api/client/analytics:
+    post:
+      summary: Send client hardware/OS data
+      operationId: analytics.api_client_analytics
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [api_level]
+              properties:
+                api_level: { type: integer }
+                app_version_code: { type: integer }
+                app_version_name: { type: string }
+                device_model: { type: string }
+                manufacturer: { type: string }
+                lang: { type: string }
+      responses:
+        '200':
+          description: Analytics recorded
+
+  /api/stats:
+    get:
+      summary: Get global store statistics
+      operationId: admin.get_stats
+      security:
+        - AdminAuth: []
+      responses:
+        '200':
+          description: JSON object with totals
+        '403':
+          description: Forbidden (Admin access denied)
+
+  /html/apps:
+    get:
+      summary: Unknown
+      operationId: misc.return404
+      responses:
+        '404':
+          description: Expected output
+
+  /html/apps/{filename}:
+    get:
+      summary: Get app icon
+      operationId: download.app_icon
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Image stream
+        '404':
+          description: No such app
+  
+  /html/screenshots/{package_name}/{file_name}:
+    get:
+      summary: Get a screenshot
+      operationId: download.app_sshot
+      parameters:
+        - name: package_name
+          in: path
+          required: true
+          schema: { type: string }
+        - name: file_name
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Image stream
+        '404':
+          description: No such file
